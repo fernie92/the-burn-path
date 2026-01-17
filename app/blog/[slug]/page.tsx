@@ -1,14 +1,11 @@
-import { getAllPosts } from "@/lib/posts";
+import { getAllPosts, type Post } from "@/lib/posts";
 import { notFound } from "next/navigation";
 import { remark } from "remark";
 import html from "remark-html";
 
-export async function generateStaticParams() {
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
   const posts = getAllPosts();
-
-  return posts.map((post: any) => ({
-    slug: post.slug,
-  }));
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export default async function PostPage({
@@ -18,12 +15,10 @@ export default async function PostPage({
 }) {
   const { slug } = await params;
 
-  const posts = getAllPosts();
-  const post = posts.find((p: any) => p.slug === slug);
+  const posts: Post[] = getAllPosts();
+  const post = posts.find((p) => p.slug === slug);
 
-  if (!post) {
-    notFound();
-  }
+  if (!post) notFound();
 
   const processed = await remark().use(html).process(post.content);
   const contentHtml = processed.toString();
@@ -35,5 +30,11 @@ export default async function PostPage({
     </main>
   );
 }
+
+
+
+
+
+
 
 
