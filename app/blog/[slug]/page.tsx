@@ -1,9 +1,10 @@
-import { getAllPosts, type Post } from "@/lib/posts";
+// app/blog/[slug]/page.tsx
+import { getAllPosts, getPostBySlug } from "@/lib/posts";
 import { notFound } from "next/navigation";
 import { remark } from "remark";
 import html from "remark-html";
 
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
+export function generateStaticParams() {
   const posts = getAllPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }
@@ -15,9 +16,7 @@ export default async function PostPage({
 }) {
   const { slug } = await params;
 
-  const posts: Post[] = getAllPosts();
-  const post = posts.find((p) => p.slug === slug);
-
+  const post = getPostBySlug(slug);
   if (!post) notFound();
 
   const processed = await remark().use(html).process(post.content);
@@ -25,16 +24,17 @@ export default async function PostPage({
 
   return (
     <main style={{ maxWidth: 720, margin: "4rem auto", padding: "0 1rem" }}>
-      <h1>{post.title}</h1>
+      <h1 style={{ marginBottom: "0.5rem" }}>{post.title}</h1>
+
+      {post.date ? (
+        <div style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+          {new Date(post.date).toLocaleDateString()}
+        </div>
+      ) : (
+        <div style={{ marginBottom: "1.5rem" }} />
+      )}
+
       <article dangerouslySetInnerHTML={{ __html: contentHtml }} />
     </main>
   );
 }
-
-
-
-
-
-
-
-
