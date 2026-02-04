@@ -2,28 +2,45 @@
 import Link from "next/link";
 import { getAllPosts } from "@/lib/posts";
 
+function formatDate(date?: string) {
+  if (!date) return null;
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return date;
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+export const metadata = {
+  title: "Blog | The Burn Path",
+  description: "Posts on mindset, fitness, money, and building financial freedom.",
+};
+
 export default function BlogIndexPage() {
   const posts = getAllPosts();
 
   return (
     <main style={{ maxWidth: 720, margin: "4rem auto", padding: "0 1rem" }}>
-      <h1 style={{ marginBottom: "1.5rem" }}>Blog</h1>
+      <h1>Blog</h1>
 
       {posts.length === 0 ? (
-        <p style={{ color: "#555" }}>No posts yet.</p>
+        <p>No posts yet.</p>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        <ul style={{ listStyle: "none", padding: 0, margin: "1.5rem 0" }}>
           {posts.map((post) => (
             <li key={post.slug} style={{ padding: "1rem 0", borderBottom: "1px solid #eee" }}>
               <Link
                 href={`/blog/${post.slug}`}
-                style={{ fontSize: "1.1rem", fontWeight: 600, textDecoration: "none" }}
+                style={{
+                  display: "inline-block",
+                  fontSize: "1.25rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
               >
                 {post.title}
               </Link>
 
-              <div style={{ marginTop: "0.25rem", color: "#666", fontSize: "0.9rem" }}>
-                {post.date ? new Date(post.date).toLocaleDateString() : null}
+              <div style={{ marginTop: "0.25rem", fontSize: "0.9rem", color: "#666" }}>
+                {formatDate(post.date)}
               </div>
 
               {post.description ? (

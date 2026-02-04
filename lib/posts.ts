@@ -1,64 +1,106 @@
 // lib/posts.ts
 import fs from "fs";
 import path from "path";
-import matter from "gray-matter";
 
 export type Post = {
   slug: string;
   title: string;
-  date?: string; // ISO "YYYY-MM-DD"
+  date?: string; // ISO yyyy-mm-dd (recommended)
   description?: string;
-  content: string; // markdown content without frontmatter
+  content: string; // markdown body (frontmatter removed)
 };
 
 const postsDir = path.join(process.cwd(), "content", "posts");
 
-function safeReadDir(dir: string): string[] {
-  try {
-    return fs.readdirSync(dir);
-  } catch {
-    return [];
+function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
+  const trimmed = raw.replace(/^\uFEFF/, ""); // strip BOM if present
+
+  // Expect:
+  // ---
+  // key: "value"
+  // key2: value
+  // ---
+  // body...
+  if (!trimmed.startsWith("---")) {
+    return { data: {}, body: trimmed };
   }
+
+  const end = trimmed.indexOf("\n---", 3);
+  if (end === -1) {
+    return { data: {}, body: trimmed };
+  }
+
+  // Find the line that ends the frontmatter block
+  const endLineIdx = trimmed.indexOf("\n", end + 1);
+  const frontmatterBlock = trimmed.slice(3, end).trim();
+  const body = (endLineIdx === -1 ? "" : trimmed.slice(endLineIdx + 1)).trim();
+
+  const data: Record<string, string> = {};
+  for (const line of frontmatterBlock.split("\n")) {
+    const l = line.trim();
+    if (!l || l.startsWith("#")) continue;
+    const colon = l.indexOf(":");
+    if (colon === -1) continue;
+
+    const key = l.slice(0, colon).trim();
+    let value = l.slice(colon + 1).trim();
+
+    // remove wrapping quotes if present
+    value = value.replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
+
+    data[key] = value;
+  }
+
+  return { data, body };
+}
+
+function safeSlugFromFilename(file: string) {
+  return file.replace(/\.md$/, "");
 }
 
 export function getAllPosts(): Post[] {
-  const files = safeReadDir(postsDir).filter((f) => f.endsWith(".md"));
+  if (!fs.existsSync(postsDir)) return [];
 
-  const posts = files
-    .map((file) => {
-      const fullPath = path.join(postsDir, file);
-      const raw = fs.readFileSync(fullPath, "utf8");
+  const files = fs
+    .readdirSync(postsDir)
+    .filter((f) => f.endsWith(".md"));
 
-      const { data, content } = matter(raw);
+  const posts: Post[] = files.map((file) => {
+    const fullPath = path.join(postsDir, file);
+    const raw = fs.readFileSync(fullPath, "utf8");
 
-      const fileSlug = file.replace(/\.md$/, "");
-      const slug =
-        typeof data.slug === "string" && data.slug.trim() ? data.slug.trim() : fileSlug;
+    const { data, body } = parseFrontmatter(raw);
 
-      const title =
-        typeof data.title === "string" && data.title.trim()
-          ? data.title.trim()
-          : slug.replace(/-/g, " ");
+    const slug = (data.slug && data.slug.trim()) || safeSlugFromFilename(file);
+    const title = (data.title && data.title.trim()) || slug;
+    const date = data.date ? data.date.trim() : undefined;
+    const description = data.description ? data.description.trim() : undefined;
 
-      const date = typeof data.date === "string" ? data.date : undefined;
-      const description =
-        typeof data.description === "string" && data.description.trim()
-          ? data.description.trim()
-          : undefined;
+    return {
+      slug,
+      title,
+      date,
+      description,
+      content: body,
+    };
+  });
 
-      return { slug, title, date, description, content };
-    })
-    // newest first when date is present
-    .sort((a, b) => {
-      const ad = a.date ? Date.parse(a.date) : 0;
-      const bd = b.date ? Date.parse(b.date) : 0;
-      return bd - ad;
-    });
+  // Newest first if date exists; otherwise stable alpha by title
+  posts.sort((a, b) => {
+    const ad = a.date ? Date.parse(a.date) : NaN;
+    const bd = b.date ? Date.parse(b.date) : NaN;
+
+    if (!Number.isNaN(ad) && !Number.isNaN(bd)) return bd - ad;
+    if (!Number.isNaN(ad) && Number.isNaN(bd)) return -1;
+    if (Number.isNaN(ad) && !Number.isNaN(bd)) return 1;
+
+    return a.title.localeCompare(b.title);
+  });
 
   return posts;
 }
 
-export function getPostBySlug(slug: string): Post | null {
+export function getPostBySlug(slug: string): Post | undefined {
   const posts = getAllPosts();
-  return posts.find((p) => p.slug === slug) ?? null;
+  return posts.find((p) => p.slug === slug);
 }
