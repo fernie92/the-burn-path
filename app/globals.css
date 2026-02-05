@@ -1,3 +1,4 @@
+/* app/globals.css */
 :root {
   --bg: #ffffff;
   --text: #111111;
@@ -24,6 +25,10 @@ body {
 a {
   color: var(--link);
   text-decoration: none;
+}
+
+a:visited {
+  color: var(--link);
 }
 
 a:hover {
@@ -76,12 +81,6 @@ a:hover {
   margin: 2rem 0 0.75rem 0;
 }
 
-/* Added: make h1 in articles clearly larger */
-.prose h1 {
-  font-size: 2.25rem;
-  margin-top: 0;
-}
-
 .prose h2 {
   font-size: 1.5rem;
 }
@@ -126,11 +125,4 @@ a:hover {
 .prose pre code {
   background: transparent;
   padding: 0;
-}
-
-/* Added: matches the class used in the post page component */
-.meta {
-  margin: 0 0 2rem 0;
-  color: var(--muted);
-  font-size: 0.95rem;
 }
