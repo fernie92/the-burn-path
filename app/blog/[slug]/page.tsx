@@ -1,62 +1,58 @@
-// app/blog/[slug]/page.tsx
-import { getAllPosts, getPostBySlug } from "@/lib/posts";
+import { getAllPosts, type Post } from "@/lib/posts";
 import { notFound } from "next/navigation";
 import { remark } from "remark";
 import html from "remark-html";
-
-function formatDate(date?: string) {
-  if (!date) return null;
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
 
 export async function generateStaticParams() {
   const posts = getAllPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }
 
-export async function generateMetadata({
-  params,
-}: {
+type Props = {
   params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
+};
 
-  if (!post) return { title: "Not Found | The Burn Path" };
+function formatDate(input: string) {
+  // Accepts "YYYY-MM-DD" or ISO strings
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return input;
 
-  return {
-    title: `${post.title} | The Burn Path`,
-    description: post.description || `Read "${post.title}" on The Burn Path.`,
-  };
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(d);
 }
 
-export default async function PostPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function BlogPost({ params }: Props) {
   const { slug } = await params;
 
-  const post = getPostBySlug(slug);
+  const posts: Post[] = getAllPosts();
+  const post = posts.find((p) => p.slug === slug);
+
   if (!post) notFound();
 
   const processed = await remark().use(html).process(post.content);
   const contentHtml = processed.toString();
 
   return (
-    <main style={{ maxWidth: 720, margin: "4rem auto", padding: "0 1rem" }}>
-      <h1 style={{ marginBottom: "0.25rem" }}>{post.title}</h1>
-      {post.date ? (
-        <div style={{ marginBottom: "1.5rem", color: "#666", fontSize: "0.95rem" }}>
-          {formatDate(post.date)}
-        </div>
-      ) : (
-        <div style={{ marginBottom: "1.5rem" }} />
-      )}
+    <main className="container">
+      <header className="postHeader">
+        <h1 className="postTitle">{post.title}</h1>
 
-      <article dangerouslySetInnerHTML={{ __html: contentHtml }} />
+        {"date" in post && post.date ? (
+          <p className="postMeta">{formatDate(String(post.date))}</p>
+        ) : null}
+
+        {"description" in post && post.description ? (
+          <p className="postLead">{String(post.description)}</p>
+        ) : null}
+      </header>
+
+      <article
+        className="prose"
+        dangerouslySetInnerHTML={{ __html: contentHtml }}
+      />
     </main>
   );
 }

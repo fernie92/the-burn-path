@@ -1,26 +1,123 @@
-@import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --text: #111111;
+  --muted: #666666;
+  --border: #e7e7e7;
+  --link: #111111;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  padding: 0;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    sans-serif;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 720px;
+  margin: 4rem auto;
+  padding: 0 1rem;
+}
+
+.postHeader {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.postTitle {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0 0 0.5rem 0;
+}
+
+.postMeta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.postLead {
+  margin: 0.75rem 0 0 0;
+  color: var(--text);
+}
+
+/* Article typography (scoped) */
+.prose {
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.prose p {
+  margin: 1rem 0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  line-height: 1.25;
+  margin: 2rem 0 0.75rem 0;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+}
+
+.prose h3 {
+  font-size: 1.25rem;
+}
+
+.prose ul,
+.prose ol {
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+}
+
+.prose li {
+  margin: 0.25rem 0;
+}
+
+.prose blockquote {
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+
+.prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+  background: #f4f4f4;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+}
+
+.prose pre {
+  overflow: auto;
+  padding: 1rem;
+  background: #f4f4f4;
+  border-radius: 8px;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
 }
