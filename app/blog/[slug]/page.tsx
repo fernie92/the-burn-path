@@ -1,58 +1,47 @@
-import { getAllPosts, type Post } from "@/lib/posts";
+// app/blog/[slug]/page.tsx
+import { getAllPosts } from "@/lib/posts";
 import { notFound } from "next/navigation";
-import { remark } from "remark";
-import html from "remark-html";
 
-export async function generateStaticParams() {
-  const posts = getAllPosts();
-  return posts.map((post) => ({ slug: post.slug }));
-}
-
+type Params = { slug: string };
 type Props = {
-  params: Promise<{ slug: string }>;
+  params: Promise<Params>;
 };
 
-function formatDate(input: string) {
-  // Accepts "YYYY-MM-DD" or ISO strings
-  const d = new Date(input);
-  if (Number.isNaN(d.getTime())) return input;
-
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(d);
+export function generateStaticParams() {
+  return getAllPosts().map((p) => ({ slug: p.slug }));
 }
 
 export default async function BlogPost({ params }: Props) {
   const { slug } = await params;
 
-  const posts: Post[] = getAllPosts();
-  const post = posts.find((p) => p.slug === slug);
-
+  const post = getAllPosts().find((p) => p.slug === slug);
   if (!post) notFound();
 
-  const processed = await remark().use(html).process(post.content);
-  const contentHtml = processed.toString();
+  // supports either pre-rendered HTML (contentHtml) or plain text (content)
+  const html = (post as any).contentHtml as string | undefined;
+  const text = (post as any).content as string | undefined;
 
   return (
-    <main className="container">
+    <article className="container">
       <header className="postHeader">
         <h1 className="postTitle">{post.title}</h1>
-
-        {"date" in post && post.date ? (
-          <p className="postMeta">{formatDate(String(post.date))}</p>
-        ) : null}
-
-        {"description" in post && post.description ? (
-          <p className="postLead">{String(post.description)}</p>
-        ) : null}
+        <p className="postMeta">
+          {new Date(post.date).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
+        </p>
+        {post.description ? <p className="postLead">{post.description}</p> : null}
       </header>
 
-      <article
-        className="prose"
-        dangerouslySetInnerHTML={{ __html: contentHtml }}
-      />
-    </main>
+      <div className="prose">
+        {html ? (
+          <div dangerouslySetInnerHTML={{ __html: html }} />
+        ) : (
+          <p>{text ?? ""}</p>
+        )}
+      </div>
+    </article>
   );
 }
