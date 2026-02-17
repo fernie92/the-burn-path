@@ -1,3 +1,4 @@
+// app/page.tsx
 export default function Home() {
   return (
     <main style={{ maxWidth: 720, margin: "4rem auto", padding: "0 1rem" }}>
@@ -10,11 +11,6 @@ export default function Home() {
         <li>Markdown-based posts</li>
         <li>Weekly publishing cadence</li>
       </ul>
-
-      <footer style={{ marginTop: "4rem", color: "#666" }}>
-        © 2026 The Burn Path
-      </footer>
     </main>
   );
 }
-

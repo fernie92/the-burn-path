@@ -1,4 +1,3 @@
-// app/blog/[slug]/page.tsx
 import { getAllPosts } from "@/lib/posts";
 import { notFound } from "next/navigation";
 import { remark } from "remark";
@@ -10,6 +9,7 @@ type Props = {
 
 function formatPostDate(date?: string): string | null {
   if (!date) return null;
+
   const d = new Date(date);
   if (Number.isNaN(d.getTime())) return null;
 
@@ -21,6 +21,7 @@ function formatPostDate(date?: string): string | null {
 }
 
 export default async function BlogPost({ params }: Props) {
+  // ✅ MUST unwrap params
   const { slug } = await params;
 
   const post = getAllPosts().find((p) => p.slug === slug);
@@ -36,11 +37,11 @@ export default async function BlogPost({ params }: Props) {
       <header className="postHeader">
         <h1 className="postTitle">{post.title}</h1>
 
-        {dateLabel ? <p className="postMeta">{dateLabel}</p> : null}
+        {dateLabel && <p className="postMeta">{dateLabel}</p>}
 
-        {post.description ? (
+        {post.description && (
           <p className="postLead">{post.description}</p>
-        ) : null}
+        )}
       </header>
 
       <article

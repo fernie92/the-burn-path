@@ -5,7 +5,7 @@ import { getAllPosts, type Post } from "@/lib/posts";
 function formatDate(date?: string) {
   if (!date) return null;
   const ts = Date.parse(date);
-  if (Number.isNaN(ts)) return date; // show raw if weird
+  if (Number.isNaN(ts)) return date;
   return new Date(ts).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
@@ -17,7 +17,7 @@ export default function BlogIndexPage() {
   const posts: Post[] = getAllPosts();
 
   return (
-    <main style={{ maxWidth: 720, margin: "4rem auto", padding: "0 1rem" }}>
+    <main className="container">
       <h1 style={{ marginBottom: "1.5rem" }}>Blog</h1>
 
       {posts.length === 0 ? (
@@ -30,10 +30,7 @@ export default function BlogIndexPage() {
             return (
               <li
                 key={post.slug}
-                style={{
-                  padding: "1rem 0",
-                  borderTop: "1px solid #e5e5e5",
-                }}
+                style={{ padding: "1rem 0", borderTop: "1px solid #e5e5e5" }}
               >
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <Link

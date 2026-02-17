@@ -12,11 +12,22 @@ export type Post = {
 
 const postsDir = path.join(process.cwd(), "content", "posts");
 
-function stripQuotes(s: string) {
-  return s.replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
+function normalizeRaw(raw: string) {
+  // Strip BOM + normalize newlines
+  return raw.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
 }
 
-function parseFrontMatter(raw: string): { data: Record<string, string>; body: string } {
+function stripQuotes(s: string) {
+  const t = s.trim();
+  if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
+    return t.slice(1, -1).trim();
+  }
+  return t;
+}
+
+function parseFrontMatter(rawInput: string): { data: Record<string, string>; body: string } {
+  const raw = normalizeRaw(rawInput);
+
   // Supports:
   // ---
   // key: "value"
@@ -25,6 +36,7 @@ function parseFrontMatter(raw: string): { data: Record<string, string>; body: st
   if (!raw.startsWith("---")) return { data: {}, body: raw };
 
   const lines = raw.split("\n");
+
   // find second --- delimiter
   let end = -1;
   for (let i = 1; i < lines.length; i++) {
@@ -42,10 +54,12 @@ function parseFrontMatter(raw: string): { data: Record<string, string>; body: st
   for (const line of fmLines) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
+
     const idx = trimmed.indexOf(":");
     if (idx === -1) continue;
+
     const key = trimmed.slice(0, idx).trim();
-    const value = stripQuotes(trimmed.slice(idx + 1).trim());
+    const value = stripQuotes(trimmed.slice(idx + 1));
     if (key) data[key] = value;
   }
 
@@ -64,9 +78,8 @@ function inferTitleFromBody(body: string, fallback: string) {
 export function getAllPosts(): Post[] {
   if (!fs.existsSync(postsDir)) return [];
 
-  const files = fs
-    .readdirSync(postsDir)
-    .filter((f) => f.endsWith(".md") || f.endsWith(".mdx"));
+  // Only read .md until you add an MDX renderer.
+  const files = fs.readdirSync(postsDir).filter((f) => f.endsWith(".md"));
 
   const posts = files.map((file) => {
     const fullPath = path.join(postsDir, file);
@@ -74,21 +87,14 @@ export function getAllPosts(): Post[] {
 
     const { data, body } = parseFrontMatter(raw);
 
-    const fileSlug = file.replace(/\.(md|mdx)$/, "");
+    const fileSlug = file.replace(/\.md$/, "");
     const slug = (data.slug?.trim() || fileSlug).trim();
-
     const title = (data.title?.trim() || inferTitleFromBody(body, fileSlug)).trim();
 
     const date = data.date?.trim();
     const description = data.description?.trim();
 
-    return {
-      slug,
-      title,
-      date,
-      description,
-      content: body,
-    } satisfies Post;
+    return { slug, title, date, description, content: body } satisfies Post;
   });
 
   // Sort newest first when dates exist

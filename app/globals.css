@@ -126,3 +126,15 @@ a:hover {
   background: transparent;
   padding: 0;
 }
+
+.nav-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.main-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
